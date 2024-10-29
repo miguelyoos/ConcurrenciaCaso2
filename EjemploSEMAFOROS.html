@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deadlock en Transferencias Bancarias</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #fff;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #459ae9;
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .explanation {
+            background-color: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px auto;
+            max-width: 800px;
+            line-height: 1.6;
+        }
+
+        .bank-container {
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            margin: 40px 0;
+        }
+
+        .account {
+            background: linear-gradient(145deg, #233148, #2c3e50);
+            padding: 30px;
+            border-radius: 20px;
+            width: 200px;
+            transition: all 0.3s ease;
+        }
+
+        .account.locked {
+            box-shadow: 0 0 20px #45d0e9;
+        }
+
+        button {
+            background: linear-gradient(145deg, #4550e9, #38c2c2);
+            padding: 12px 25px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(233, 69, 96, 0.4);
+        }
+
+        button:disabled {
+            background: #555;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .status {
+            background-color: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 30px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Simulador de Deadlock Bancario</h1>
+    
+    <div class="explanation">
+        <h2>¿Qué es un Deadlock?</h2>
+        <p>Un deadlock ocurre cuando dos o más procesos se bloquean mutuamente, esperando recursos que el otro proceso tiene bloqueados. En este ejemplo:</p>
+        <ul>
+            <li>La Cuenta A necesita acceder a la Cuenta B para completar la transferencia</li>
+            <li>La Cuenta B necesita acceder a la Cuenta A para completar la transferencia</li>
+            <li>Si ambas se bloquean simultáneamente, ninguna puede completar su operación</li>
+        </ul>
+    </div>
+
+    <div class="bank-container">
+        <div class="account" id="account1">
+            <p>Cuenta A</p>
+            <button id="lock1">Bloquear</button>
+        </div>
+        <div class="account" id="account2">
+            <p>Cuenta B</p>
+            <button id="lock2">Bloquear</button>
+        </div>
+    </div>
+    
+    <div class="status" id="status">
+        <p>Estado: Esperando acción...</p>
+    </div>
+    
+    <script>
+        const lock1Button = document.getElementById("lock1");
+        const lock2Button = document.getElementById("lock2");
+        const statusDisplay = document.getElementById("status");
+        const account1Element = document.getElementById("account1");
+        const account2Element = document.getElementById("account2");
+
+        let account1Locked = false;
+        let account2Locked = false;
+
+        function lockAccount(account) {
+            if (account === 1) {
+                account1Locked = true;
+                lock1Button.disabled = true;
+                account1Element.classList.add('locked');
+            } else if (account === 2) {
+                account2Locked = true;
+                lock2Button.disabled = true;
+                account2Element.classList.add('locked');
+            }
+
+            if (account1Locked && account2Locked) {
+                statusDisplay.innerHTML = `
+                    <p style="color: #e94560; font-weight: bold;">
+                        ¡DEADLOCK DETECTADO!
+                    </p>
+                    <p>Ambas cuentas están bloqueadas esperando recursos de la otra cuenta.</p>
+                    <button onclick="resetSimulation()" style="margin-top: 15px;">
+                        Reiniciar Simulación
+                    </button>
+                `;
+            }
+            updateStatus();
+        }
+
+        function updateStatus() {
+            if (account1Locked && !account2Locked) {
+                statusDisplay.innerHTML = `
+                    <p>📊 Estado actual:</p>
+                    <p>Cuenta A está bloqueada y espera que Cuenta B se libere</p>
+                `;
+            } else if (account2Locked && !account1Locked) {
+                statusDisplay.innerHTML = `
+                    <p>📊 Estado actual:</p>
+                    <p>Cuenta B está bloqueada y espera que Cuenta A se libere</p>
+                `;
+            } else if (!account1Locked && !account2Locked) {
+                statusDisplay.innerHTML = `
+                    <p>📊 Estado: Sistema listo</p>
+                    <p>Selecciona una cuenta para comenzar la simulación</p>
+                `;
+            }
+        }
+
+        function resetSimulation() {
+            account1Locked = false;
+            account2Locked = false;
+            lock1Button.disabled = false;
+            lock2Button.disabled = false;
+            account1Element.classList.remove('locked');
+            account2Element.classList.remove('locked');
+            updateStatus();
+        }
+
+        lock1Button.addEventListener("click", () => lockAccount(1));
+        lock2Button.addEventListener("click", () => lockAccount(2));
+    </script>
+</body>
+</html>
